@@ -15,7 +15,10 @@ app.get("/", (req, res) => {
   res.send("Hello World!");
 })
 
-// register : /users/register
+// user routes
+// /users/register
+// /users/login
+// /users/logout
 app.use("/users", userRouter);
 
 export default app;

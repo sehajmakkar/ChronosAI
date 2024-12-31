@@ -14,7 +14,6 @@ const userSchema = new mongoose.Schema({
   },
   password: {
     type: String,
-    trim: true,
     required: true,
     select: false,
   },
@@ -26,8 +25,10 @@ userSchema.statics.hashPassword = async (password) => {
 };
 
 // method for comparing password
-userSchema.statics.comparePassword = async (password, hashedPassword) => {
-  return await bcrypt.compare(password, hashedPassword);
+// this.password is undefined in arrow functions annd this points to the password in the lexical scope, so use simple functions.
+userSchema.methods.comparePassword = async function (password) {
+  console.log("isCompare mein hu");
+  return await bcrypt.compare(password, this.password);
 };
 
 // method for generating jwt

@@ -14,6 +14,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 import userRouter from "./routes/user.route.js";
+import projectRouter from "./routes/project.routes.js";
 
 app.get("/", (req, res) => {
   res.send("Hello World!");
@@ -25,5 +26,10 @@ app.get("/", (req, res) => {
 // /users/logout
 // /users/profile
 app.use("/users", userRouter);
+
+// project routes
+// /projects/create
+app.use("/projects", projectRouter);
+
 
 export default app;

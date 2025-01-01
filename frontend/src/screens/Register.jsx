@@ -6,8 +6,10 @@ import {
   Link,
   useNavigate,
 } from "react-router-dom";
-import { useState } from "react";
+import { useState, useContext } from "react";
 import axios from "../config/axios";
+
+import { UserContext } from "../context/user.context";
 
 const SignupPage = () => {
   const navigate = useNavigate();
@@ -15,12 +17,18 @@ const SignupPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
+  const { user, setUser } = useContext(UserContext);
+
   function handleSignup(e) {
     e.preventDefault();
     axios
       .post("/users/register", { email, password })
       .then((res) => {
         console.log(res.data);
+
+        localStorage.setItem("token", res.data.token);
+        setUser(res.data.user);
+
         navigate("/");
       })
       .catch((err) => {

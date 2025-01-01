@@ -7,13 +7,16 @@ import {
   useNavigate,
 } from "react-router-dom";
 import axios from "../config/axios";
-import { useState } from "react";
+import { useState, useContext } from "react";
+import { UserContext } from "../context/user.context";
 
 const LoginPage = () => {
   const navigate = useNavigate();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
+  const { user, setUser } = useContext(UserContext);
 
   function submitHandler(e) {
     e.preventDefault();
@@ -23,6 +26,10 @@ const LoginPage = () => {
       .then((res) => {
         // then wala part only works when email and password are correct
         console.log(res.data); // password hide karna mat bhoolna backend controller mein se
+
+        localStorage.setItem("token", res.data.token);
+        setUser(res.data.user);
+
         navigate("/");
       })
       .catch((err) => {

@@ -15,6 +15,7 @@ export const createUserController = async (req, res) => {
 
     const token = await user.generateJwt();
 
+    delete user._doc.password; // nahi toh password show hoga frontend mein console mein user mein
     res.status(201).json({ user, token });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -46,6 +47,7 @@ export const loginUserController = async (req, res) => {
 
     const token = await user.generateJwt();
 
+    delete user._doc.password;
     res.status(200).json({ user, token });
   } catch (error) {
     // console.log("idhar hai error");

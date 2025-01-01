@@ -38,7 +38,8 @@ userSchema.methods.generateJwt = function () {
       // _id: this._id,
       email: this.email,
     },
-    process.env.JWT_SECRET
+    process.env.JWT_SECRET,
+    { expiresIn: "24h" }
   );
 };
 

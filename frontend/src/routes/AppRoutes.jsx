@@ -3,6 +3,7 @@ import { Route, Routes, BrowserRouter } from 'react-router-dom'
 import LoginPage from '../screens/Login.jsx'
 import SignupPage from '../screens/Register.jsx'
 import Home from '../screens/Home.jsx'
+import Project from '../screens/Project.jsx'
 
 const AppRoutes = () => {
   return (
@@ -16,6 +17,9 @@ const AppRoutes = () => {
       } />
       <Route path="/register" element={
         <SignupPage/>
+      } />
+      <Route path="/project" element={
+        <Project/>
       } />
     </Routes>
    </BrowserRouter>

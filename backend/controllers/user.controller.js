@@ -75,3 +75,21 @@ export const logoutController = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+export const getAllUsersController = async (req, res) => {
+  try {
+
+    // hume isme vo user nahi chahiye jo loggedIn hai
+    const loggedInUser = await userModel.findOne({ email: req.user.email });
+    const userId = loggedInUser._id;
+
+    const allUsers = await userService.getAllUsers({ userId })
+
+    res.status(200).json({ allUsers });
+
+  } catch(err) {
+    console.log(err);
+    res.status(500).json({ error: err.message });
+  }
+}
+

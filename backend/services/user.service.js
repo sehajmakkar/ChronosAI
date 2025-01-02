@@ -15,3 +15,13 @@ export const createUser = async ({ email, password }) => {
 
   return user;
 };
+
+
+// get all users
+export const getAllUsers = async ({ userId }) => {
+  // saare user chahiye, buss jo user logged in hai vo nahi.
+  const users = await userModel.find({
+    _id: { $ne: userId },
+  });
+  return users;
+};

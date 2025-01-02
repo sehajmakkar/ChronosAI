@@ -25,6 +25,7 @@ app.get("/", (req, res) => {
 // /users/login
 // /users/logout
 // /users/profile
+// /users/getAllUsers
 app.use("/users", userRouter);
 
 // project routes

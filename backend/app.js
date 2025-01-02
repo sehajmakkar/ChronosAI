@@ -29,6 +29,8 @@ app.use("/users", userRouter);
 
 // project routes
 // /projects/create
+// /projects/all
+// /projects/add-user
 app.use("/projects", projectRouter);
 
 

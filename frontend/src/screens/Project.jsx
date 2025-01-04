@@ -1,10 +1,15 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { useLocation } from "react-router-dom";
 import axios from "../config/axios";
+import { initializeSocket, recieveMessage, sendMessage } from "../config/socket";
+import { UserContext } from "../context/user.context";
 
 const Project = () => {
   const location = useLocation();
   // console.log(location.state);
+
+  const {user} = useContext(UserContext);
+  console.log(user);
 
   const [panel, setPanel] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
@@ -55,8 +60,25 @@ const Project = () => {
       console.log(err.response.data);
     });
   }
+
+  const [message, setMessage] = useState("");
+  function send(){
+    // client to server to the particular room in which user is present.
+    sendMessage("project-message", { 
+      message,
+      // sender from userContext
+      sender: user._id
+     });
+
+    setMessage("");
+  }
   
   useEffect(() => {
+
+    initializeSocket(project._id);
+    recieveMessage("project-message", data => {
+      console.log(data);
+    })
     
     axios.get(`/projects/get-project/${location.state._id}`)
     .then((res) => {
@@ -114,8 +136,12 @@ const Project = () => {
               type="text"
               placeholder="Enter message..."
               className="p-2 px-4 border-none outline-none flex-grow"
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
             />
-            <button className="px-5 bg-slate-950 text-white">
+            <button className="px-5 bg-slate-950 text-white"
+            onClick={send}
+            >
               <i className="ri-send-plane-fill"></i>
             </button>
           </div>

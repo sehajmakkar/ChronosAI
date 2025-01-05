@@ -15,6 +15,7 @@ app.use(cookieParser());
 
 import userRouter from "./routes/user.route.js";
 import projectRouter from "./routes/project.routes.js";
+import aiRouter from "./routes/ai.routes.js";
 
 app.get("/", (req, res) => {
   res.send("Hello World!");
@@ -33,6 +34,10 @@ app.use("/users", userRouter);
 // /projects/all
 // /projects/add-user
 app.use("/projects", projectRouter);
+
+// ai routes
+// /ai/get-result
+app.use("/ai", aiRouter);
 
 
 export default app;

@@ -8,6 +8,9 @@ import {
 } from "../config/socket";
 import { UserContext } from "../context/user.context";
 
+// npm library used to convert markdown to jsx as we get response from AI in markdown mostly.
+import Markdown from "markdown-to-jsx";
+
 const Project = () => {
   const location = useLocation();
   // console.log(location.state);

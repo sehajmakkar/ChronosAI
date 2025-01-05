@@ -67,7 +67,8 @@ io.on('connection', socket => {
     // ai response when the message contains @ai
     const message = data.message;
     const aiIsPresentInMessage = message.includes("@ai")
-
+    socket.broadcast.to(socket.roomId).emit('project-message', data);
+    
     if(aiIsPresentInMessage){
       
       const prompt = message.replace("@ai ","");
@@ -85,7 +86,6 @@ io.on('connection', socket => {
     }
 
     console.log(data);
-    socket.broadcast.to(socket.roomId).emit('project-message', data);
   })
 
   socket.on('event', data => { /* … */ });

@@ -26,6 +26,8 @@ const Project = () => {
   const [users, setUsers] = useState([]);
   const [project, setProject] = useState(location.state);
 
+  const [messages, setMessages] = useState([]);
+
   // Predefined default images
   const defaultImages = [
     "bulba1.jpg",
@@ -80,58 +82,58 @@ const Project = () => {
       sender: user,
     });
 
-    appendOutgoingMessage(message);
+    setMessages((prevMessages) => [...prevMessages, { sender: user, message }]); // add new outgoing message to state
 
     setMessage("");
   }
 
   const messageBox = React.createRef();
-  function appendIncomingMessage(messageObject) {
-    const messageBox = document.querySelector(".message-box");
-    const message = document.createElement("div");
-    message.classList.add(
-      "message",
-      "max-w-56",
-      "flex",
-      "flex-col",
-      "p-2",
-      "bg-blue-100", // Light blue for incoming messages
-      "text-blue-800", // Dark blue text for better contrast
-      "w-fit",
-      "rounded-md",
-      "shadow-sm" // Subtle shadow for a clean look
-    );
-    message.innerHTML = `
-      <small class='opacity-65 text-xs'>${messageObject.sender.email}</small>
-      <p class='text-sm'>${messageObject.message}</p>
-    `;
-    messageBox.appendChild(message);
-  }
-  
-  function appendOutgoingMessage(message) {
-    const messageBox = document.querySelector(".message-box");
-    const newMessage = document.createElement("div");
-    newMessage.classList.add(
-      "ml-auto",
-      "max-w-56",
-      "message",
-      "flex",
-      "flex-col",
-      "p-2",
-      "bg-green-100", // Light green for outgoing messages
-      "text-green-800", // Dark green text for contrast
-      "w-fit",
-      "rounded-md",
-      "shadow-sm" // Subtle shadow for aesthetic
-    );
-    newMessage.innerHTML = `
-      <small class='opacity-65 text-xs'>${user.email}</small>
-      <p class='text-sm'>${message}</p>
-    `;
-    messageBox.appendChild(newMessage);
-    scrollToBottom();
-  }
-  
+  // function appendIncomingMessage(messageObject) {
+  //   const messageBox = document.querySelector(".message-box");
+  //   const message = document.createElement("div");
+  //   message.classList.add(
+  //     "message",
+  //     "max-w-56",
+  //     "flex",
+  //     "flex-col",
+  //     "p-2",
+  //     "bg-blue-100", // Light blue for incoming messages
+  //     "text-blue-800", // Dark blue text for better contrast
+  //     "w-fit",
+  //     "rounded-md",
+  //     "shadow-sm" // Subtle shadow for a clean look
+  //   );
+  //   message.innerHTML = `
+  //     <small class='opacity-65 text-xs'>${messageObject.sender.email}</small>
+  //     <p class='text-sm'>${messageObject.message}</p>
+  //   `;
+  //   messageBox.appendChild(message);
+  // }
+
+  // function appendOutgoingMessage(message) {
+  //   const messageBox = document.querySelector(".message-box");
+  //   const newMessage = document.createElement("div");
+  //   newMessage.classList.add(
+  //     "ml-auto",
+  //     "max-w-56",
+  //     "message",
+  //     "flex",
+  //     "flex-col",
+  //     "p-2",
+  //     "bg-green-100", // Light green for outgoing messages
+  //     "text-green-800", // Dark green text for contrast
+  //     "w-fit",
+  //     "rounded-md",
+  //     "shadow-sm" // Subtle shadow for aesthetic
+  //   );
+  //   newMessage.innerHTML = `
+  //     <small class='opacity-65 text-xs'>${user.email}</small>
+  //     <p class='text-sm'>${message}</p>
+  //   `;
+  //   messageBox.appendChild(newMessage);
+  //   scrollToBottom();
+  // }
+
   function scrollToBottom() {
     messageBox.current.scrollTop = messageBox.current.scrollHeight;
   }
@@ -140,7 +142,10 @@ const Project = () => {
     initializeSocket(project._id);
     recieveMessage("project-message", (data) => {
       console.log(data);
-      appendIncomingMessage(data);
+      setMessages((prevMessages) => [
+        ...prevMessages,
+        { message: data.message, sender: data.sender },
+      ]); // add new incoming message to state
     });
 
     axios
@@ -164,7 +169,7 @@ const Project = () => {
 
   return (
     <main className="h-screen w-screen flex">
-      <section className="left flex flex-col h-full min-w-80 bg-slate-200">
+      <section className="left flex flex-col h-full min-w-80  bg-slate-200">
         <header className="flex w-full justify-between p-2 px-4 bg-slate-100 items-center">
           <button className="flex gap-2" onClick={() => setModalOpen(true)}>
             <i className="ri-add-fill"></i>
@@ -177,11 +182,40 @@ const Project = () => {
         </header>
 
         <div
-          className="conversation-area flex-grow flex flex-col overflow-y-auto p-2"
+          className="conversation-area flex-grow flex flex-col overflow-y-auto p-2 scrollbar-hide"
           ref={messageBox}
         >
-          <div className="message-box flex flex-col gap-1">
-            {/* Message cards will be dynamically appended here */}
+          <div className="message-box flex flex-col gap-3">
+            {messages.map((message, index) => {
+              const isOutgoing = message.sender._id === user._id;
+              const isAIMessage = message.sender._id === "ai";
+              return (
+                <div
+                  key={index}
+                  className={`message max-w-sm flex flex-col p-3 rounded-md shadow-md break-words ${
+                    isOutgoing
+                      ? "max-w-64 bg-green-100 text-green-800 self-end"
+                      : isAIMessage
+                      ? "bg-gray-800 text-white self-start max-w-md"
+                      : "bg-gray-100 text-gray-800 self-start"
+                  }`}
+                  
+                >
+                  <small className="opacity-75 text-xs">
+                    {message.sender.email}
+                  </small>
+                  <p className="text-sm">
+                    {message.sender._id === "ai" ? (
+                      <div className="overflow-auto bg-slate-950 text-white rounded-sm p-2">
+                        <Markdown>{message.message}</Markdown>
+                      </div>
+                    ) : (
+                      message.message
+                    )}
+                  </p>
+                </div>
+              );
+            })}
           </div>
         </div>
 

@@ -1,14 +1,18 @@
 import React, { useState, useEffect, useContext } from "react";
 import { useLocation } from "react-router-dom";
 import axios from "../config/axios";
-import { initializeSocket, recieveMessage, sendMessage } from "../config/socket";
+import {
+  initializeSocket,
+  recieveMessage,
+  sendMessage,
+} from "../config/socket";
 import { UserContext } from "../context/user.context";
 
 const Project = () => {
   const location = useLocation();
   // console.log(location.state);
 
-  const {user} = useContext(UserContext);
+  const { user } = useContext(UserContext);
   console.log(user);
 
   const [panel, setPanel] = useState(false);
@@ -50,45 +54,99 @@ const Project = () => {
   //console.log(selectedUserId);
 
   function addCollaborators() {
-    axios.put("/projects/add-user", {
-      projectId: location.state._id,
-      users: Array.from(selectedUserId),
-    }).then((res) => {
-      console.log(res);
-      setModalOpen(false);
-    }).catch((err) => {
-      console.log(err.response.data);
-    });
+    axios
+      .put("/projects/add-user", {
+        projectId: location.state._id,
+        users: Array.from(selectedUserId),
+      })
+      .then((res) => {
+        console.log(res);
+        setModalOpen(false);
+      })
+      .catch((err) => {
+        console.log(err.response.data);
+      });
   }
 
   const [message, setMessage] = useState("");
-  function send(){
+  function send() {
     // client to server to the particular room in which user is present.
-    sendMessage("project-message", { 
+    sendMessage("project-message", {
       message,
       // sender from userContext
-      sender: user._id
-     });
+      sender: user,
+    });
+
+    appendOutgoingMessage(message);
 
     setMessage("");
   }
+
+  const messageBox = React.createRef();
+  function appendIncomingMessage(messageObject) {
+    const messageBox = document.querySelector(".message-box");
+    const message = document.createElement("div");
+    message.classList.add(
+      "message",
+      "max-w-56",
+      "flex",
+      "flex-col",
+      "p-2",
+      "bg-blue-100", // Light blue for incoming messages
+      "text-blue-800", // Dark blue text for better contrast
+      "w-fit",
+      "rounded-md",
+      "shadow-sm" // Subtle shadow for a clean look
+    );
+    message.innerHTML = `
+      <small class='opacity-65 text-xs'>${messageObject.sender.email}</small>
+      <p class='text-sm'>${messageObject.message}</p>
+    `;
+    messageBox.appendChild(message);
+  }
   
+  function appendOutgoingMessage(message) {
+    const messageBox = document.querySelector(".message-box");
+    const newMessage = document.createElement("div");
+    newMessage.classList.add(
+      "ml-auto",
+      "max-w-56",
+      "message",
+      "flex",
+      "flex-col",
+      "p-2",
+      "bg-green-100", // Light green for outgoing messages
+      "text-green-800", // Dark green text for contrast
+      "w-fit",
+      "rounded-md",
+      "shadow-sm" // Subtle shadow for aesthetic
+    );
+    newMessage.innerHTML = `
+      <small class='opacity-65 text-xs'>${user.email}</small>
+      <p class='text-sm'>${message}</p>
+    `;
+    messageBox.appendChild(newMessage);
+    scrollToBottom();
+  }
+  
+  function scrollToBottom() {
+    messageBox.current.scrollTop = messageBox.current.scrollHeight;
+  }
+
   useEffect(() => {
-
     initializeSocket(project._id);
-    recieveMessage("project-message", data => {
+    recieveMessage("project-message", (data) => {
       console.log(data);
-    })
-    
-    axios.get(`/projects/get-project/${location.state._id}`)
-    .then((res) => {
-      console.log(res.data.project);
-      setProject(res.data.project);
-
-    }).catch((err) => {
-
+      appendIncomingMessage(data);
     });
 
+    axios
+      .get(`/projects/get-project/${location.state._id}`)
+      .then((res) => {
+        console.log(res.data.project);
+        setProject(res.data.project);
+      })
+      .catch((err) => {});
 
     axios
       .get("/users/all")
@@ -115,36 +173,29 @@ const Project = () => {
           </button>
         </header>
 
-        <div className="conversation-area flex-grow flex flex-col">
-          <div className="message-box flex-grow flex flex-col p-2 gap-1">
-            <div className="incoming max-w-56 flex flex-col p-2 bg-slate-50 w-fit rounded-md">
-              <small className="opacity-50 text-xs">example@gmail.com</small>
-              <p className="text-sm">
-                Hello, how are you? Lorem ipsum dolor sit.
-              </p>
-            </div>
-            <div className="outgoing max-w-56 ml-auto flex flex-col p-2 bg-slate-50 w-fit rounded-md">
-              <small className="opacity-50 text-xs">example@gmail.com</small>
-              <p className="text-sm">
-                Lorem ipsum dolor sit amet. Lorem ipsum dolor sit.
-              </p>
-            </div>
+        <div
+          className="conversation-area flex-grow flex flex-col overflow-y-auto p-2"
+          ref={messageBox}
+        >
+          <div className="message-box flex flex-col gap-1">
+            {/* Message cards will be dynamically appended here */}
           </div>
+        </div>
 
-          <div className="input-field w-full flex">
-            <input
-              type="text"
-              placeholder="Enter message..."
-              className="p-2 px-4 border-none outline-none flex-grow"
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-            />
-            <button className="px-5 bg-slate-950 text-white"
+        <div className="input-field w-full flex">
+          <input
+            type="text"
+            placeholder="Enter message..."
+            className="p-2 px-4 border border-gray-300 rounded-l-md flex-grow outline-none"
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+          />
+          <button
+            className="px-5 bg-blue-500 text-white rounded-r-md hover:bg-blue-600"
             onClick={send}
-            >
-              <i className="ri-send-plane-fill"></i>
-            </button>
-          </div>
+          >
+            <i className="ri-send-plane-fill"></i>
+          </button>
         </div>
 
         {/* side panel */}
@@ -165,23 +216,24 @@ const Project = () => {
             style={{ maxHeight: "calc(100vh - 100px)", overflowY: "auto" }}
           >
             {/* side panel ki mapping */}
-            {project.users && project.users.map((user, index) => (
-              <div
-                key={user._id}
-                className={`flex items-center p-2 rounded-md mb-2 shadow-sm ${
-                  selectedUserId === user._id
-                    ? "bg-blue-300"
-                    : "bg-slate-200 hover:bg-slate-300"
-                } transition-colors duration-200`}
-              >
-                <img
-                  src={userImages[index]}
-                  alt="User"
-                  className="w-10 h-10 rounded-full mr-3"
-                />
-                <span className="text-sm font-medium">{user.email}</span>
-              </div>
-            ))}
+            {project.users &&
+              project.users.map((user, index) => (
+                <div
+                  key={user._id}
+                  className={`flex items-center p-2 rounded-md mb-2 shadow-sm ${
+                    selectedUserId === user._id
+                      ? "bg-blue-300"
+                      : "bg-slate-200 hover:bg-slate-300"
+                  } transition-colors duration-200`}
+                >
+                  <img
+                    src={userImages[index]}
+                    alt="User"
+                    className="w-10 h-10 rounded-full mr-3"
+                  />
+                  <span className="text-sm font-medium">{user.email}</span>
+                </div>
+              ))}
           </div>
         </div>
       </section>
@@ -225,7 +277,7 @@ const Project = () => {
               <button
                 onClick={() => {
                   // Add logic to handle adding collaborators here
-                  addCollaborators()
+                  addCollaborators();
                   console.log("Add as collaborator clicked");
                   setModalOpen(false);
                 }}

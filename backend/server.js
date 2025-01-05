@@ -53,18 +53,24 @@ io.use(async (socket,next) => {
 
 io.on('connection', socket => {
 
+  socket.roomId = socket.project._id.toString();
+
   console.log('a user connected');
+  // console.log(projectId)
 
   // jaise hi user connect hoga , particular room pe join hoga apne aap.
-  socket.join(socket.project._id);
-  // event to send data
+  socket.join(socket.roomId);
+  // event to send data to other users in the room
   socket.on('project-message', data => {
     console.log(data);
-    socket.broadcast.to(socket.project._id).emit('project-message', data);
+    socket.broadcast.to(socket.roomId).emit('project-message', data);
   })
 
   socket.on('event', data => { /* … */ });
-  socket.on('disconnect', () => { /* … */ });
+  socket.on('disconnect', () => { 
+    console.log('user disconnected');
+    socket.leave(socket.roomId);
+   });
 });
 
 server.listen(process.env.PORT, () => {

@@ -28,6 +28,11 @@ const Project = () => {
 
   const [messages, setMessages] = useState([]);
 
+  const [fileTree, setFileTree] = useState({});
+
+  const [currentFile, setCurrentFile] = useState(null);
+  const [openFiles, setOpenFiles] = useState([]);
+
   // Predefined default images
   const defaultImages = [
     "bulba1.jpg",
@@ -134,14 +139,42 @@ const Project = () => {
   //   scrollToBottom();
   // }
 
+  function writeAiMessage(message) {
+    const msgObject = JSON.parse(message);
+
+    return (
+      <div className="overflow-auto bg-slate-950 text-white rounded-sm p-2">
+        <Markdown>{msgObject.text}</Markdown>
+      </div>
+    );
+  }
+
   function scrollToBottom() {
     messageBox.current.scrollTop = messageBox.current.scrollHeight;
   }
+  const handleTextAreaChange = (e) => {
+    setFileTree({
+      ...fileTree,
+      [currentFile]: {
+        file: {
+          ...fileTree[currentFile].file,
+          contents: e.target.value,
+        },
+      },
+    });
+  };
 
   useEffect(() => {
     initializeSocket(project._id);
+
     recieveMessage("project-message", (data) => {
-      console.log(data);
+      console.log(JSON.parse(data.message));
+      const message = JSON.parse(data.message);
+
+      if (message.fileTree) {
+        setFileTree(message.fileTree);
+      }
+
       setMessages((prevMessages) => [
         ...prevMessages,
         { message: data.message, sender: data.sender },
@@ -192,26 +225,21 @@ const Project = () => {
               return (
                 <div
                   key={index}
-                  className={`message max-w-sm flex flex-col p-3 rounded-md shadow-md break-words ${
+                  className={`message max-w-64 flex flex-col p-3 rounded-md shadow-md break-words ${
                     isOutgoing
-                      ? "max-w-64 bg-green-100 text-green-800 self-end"
+                      ? "max-w-60 bg-green-100 text-green-800 self-end"
                       : isAIMessage
                       ? "bg-gray-800 text-white self-start max-w-md"
                       : "bg-gray-100 text-gray-800 self-start"
                   }`}
-                  
                 >
                   <small className="opacity-75 text-xs">
                     {message.sender.email}
                   </small>
                   <p className="text-sm">
-                    {message.sender._id === "ai" ? (
-                      <div className="overflow-auto bg-slate-950 text-white rounded-sm p-2">
-                        <Markdown>{message.message}</Markdown>
-                      </div>
-                    ) : (
-                      message.message
-                    )}
+                    {message.sender._id === "ai"
+                      ? writeAiMessage(message.message)
+                      : message.message}
                   </p>
                 </div>
               );
@@ -222,7 +250,7 @@ const Project = () => {
         <div className="input-field w-full flex">
           <input
             type="text"
-            placeholder="Enter message..."
+            placeholder="Use @ai to ask AI..."
             className="p-2 px-4 border border-gray-300 rounded-l-md flex-grow outline-none"
             value={message}
             onChange={(e) => setMessage(e.target.value)}
@@ -273,6 +301,79 @@ const Project = () => {
               ))}
           </div>
         </div>
+      </section>
+
+      <section className="right bg-slate-200 h-full flex-grow flex ">
+        <div className="explorer h-full min-w-52 bg-slate-700 overflow-y-auto">
+        <h2 className="p-4 text-lg font-semibold bg-gray-900 shadow-md text-white">Files Needed</h2>
+  
+          <div className="file-tree w-full p-2">
+            {Object.keys(fileTree).map((file, index) => {
+              return (
+                <button
+                  key={index}
+                  onClick={() => {
+                    setCurrentFile(file);
+                    setOpenFiles([...new Set([...openFiles, file])]);
+                  }}
+                  className="tree-element cursor-pointer p-2 px-4 m-1 flex items-center gap-2 rounded-md bg-slate-200  hover:bg-slate-300"
+                >
+                  <p className="font-semibold text-lg">{file}</p>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {currentFile && (
+          <div className="code-editor flex flex-col flex-grow h-full max-w-full">
+            <div className="tabs-container h-14 min-h-[56px] bg-gray-100">
+              <div className="tabs-scroll-area flex overflow-x-auto whitespace-nowrap p-2 no-scrollbar">
+                {openFiles.map((file, index) => (
+                  <div
+                    key={index}
+                    className={`tab flex-shrink-0 flex items-center gap-2 px-4 py-2 mr-2 rounded-md ${
+                      currentFile === file
+                        ? "bg-slate-950 text-white"
+                        : "bg-gray-300"
+                    }`}
+                  >
+                    <span
+                      onClick={() => setCurrentFile(file)}
+                      className="cursor-pointer"
+                    >
+                      {file}
+                    </span>
+                    <button
+                      onClick={() => {
+                        const updatedFiles = openFiles.filter(
+                          (openFile) => openFile !== file
+                        );
+                        setOpenFiles(updatedFiles);
+                        setCurrentFile(
+                          updatedFiles.length > 0 ? updatedFiles[0] : null
+                        );
+                      }}
+                      className="text-gray-500 hover:text-gray-700"
+                    >
+                      <i className="ri-close-fill"></i>
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="bottom flex flex-grow p-2 overflow-hidden">
+              {fileTree[currentFile] && (
+                <textarea
+                  value={fileTree[currentFile].file.contents}
+                  onChange={handleTextAreaChange}
+                  className="w-full h-full p-4 bg-slate-50 outline-none"
+                ></textarea>
+              )}
+            </div>
+          </div>
+        )}
       </section>
 
       {/* Modal */}

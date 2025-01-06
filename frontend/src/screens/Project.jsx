@@ -11,6 +11,10 @@ import { UserContext } from "../context/user.context";
 // npm library used to convert markdown to jsx as we get response from AI in markdown mostly.
 import Markdown from "markdown-to-jsx";
 
+import hljs from 'highlight.js';
+import 'highlight.js/styles/github.css'; // You can use any available theme
+
+
 const Project = () => {
   const location = useLocation();
   // console.log(location.state);
@@ -305,7 +309,7 @@ const Project = () => {
 
       <section className="right bg-slate-200 h-full flex-grow flex ">
         <div className="explorer h-full min-w-52 bg-slate-700 overflow-y-auto">
-        <h2 className="p-4 text-lg font-semibold bg-gray-900 shadow-md text-white">Files Needed</h2>
+        <h2 className="p-4 text-lg font-semibold bg-gray-900 shadow-md text-white">File Explorer</h2>
   
           <div className="file-tree w-full p-2">
             {Object.keys(fileTree).map((file, index) => {

@@ -14,6 +14,7 @@ import Markdown from "markdown-to-jsx";
 import hljs from 'highlight.js';
 import 'highlight.js/styles/github.css'; // You can use any available theme
 
+import { getWebContainer } from "../config/webContainer";
 
 const Project = () => {
   const location = useLocation();
@@ -36,6 +37,8 @@ const Project = () => {
 
   const [currentFile, setCurrentFile] = useState(null);
   const [openFiles, setOpenFiles] = useState([]);
+
+  const [webContainer, setWebContainer] = useState(null);
 
   // Predefined default images
   const defaultImages = [
@@ -97,51 +100,6 @@ const Project = () => {
   }
 
   const messageBox = React.createRef();
-  // function appendIncomingMessage(messageObject) {
-  //   const messageBox = document.querySelector(".message-box");
-  //   const message = document.createElement("div");
-  //   message.classList.add(
-  //     "message",
-  //     "max-w-56",
-  //     "flex",
-  //     "flex-col",
-  //     "p-2",
-  //     "bg-blue-100", // Light blue for incoming messages
-  //     "text-blue-800", // Dark blue text for better contrast
-  //     "w-fit",
-  //     "rounded-md",
-  //     "shadow-sm" // Subtle shadow for a clean look
-  //   );
-  //   message.innerHTML = `
-  //     <small class='opacity-65 text-xs'>${messageObject.sender.email}</small>
-  //     <p class='text-sm'>${messageObject.message}</p>
-  //   `;
-  //   messageBox.appendChild(message);
-  // }
-
-  // function appendOutgoingMessage(message) {
-  //   const messageBox = document.querySelector(".message-box");
-  //   const newMessage = document.createElement("div");
-  //   newMessage.classList.add(
-  //     "ml-auto",
-  //     "max-w-56",
-  //     "message",
-  //     "flex",
-  //     "flex-col",
-  //     "p-2",
-  //     "bg-green-100", // Light green for outgoing messages
-  //     "text-green-800", // Dark green text for contrast
-  //     "w-fit",
-  //     "rounded-md",
-  //     "shadow-sm" // Subtle shadow for aesthetic
-  //   );
-  //   newMessage.innerHTML = `
-  //     <small class='opacity-65 text-xs'>${user.email}</small>
-  //     <p class='text-sm'>${message}</p>
-  //   `;
-  //   messageBox.appendChild(newMessage);
-  //   scrollToBottom();
-  // }
 
   function writeAiMessage(message) {
     const msgObject = JSON.parse(message);
@@ -171,9 +129,18 @@ const Project = () => {
   useEffect(() => {
     initializeSocket(project._id);
 
+    if(!webContainer) {
+      getWebContainer().then(container => {
+        setWebContainer(container);
+        console.log("container created");
+      })
+    }
+
     recieveMessage("project-message", (data) => {
       console.log(JSON.parse(data.message));
       const message = JSON.parse(data.message);
+
+      webContainer?.mount(message.fileTree);
 
       if (message.fileTree) {
         setFileTree(message.fileTree);

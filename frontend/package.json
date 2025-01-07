@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@monaco-editor/react": "^4.6.0",
+    "@webcontainer/api": "^1.5.1-internal.5",
     "axios": "^1.7.9",
     "highlight.js": "^11.11.1",
     "markdown-to-jsx": "^7.7.2",

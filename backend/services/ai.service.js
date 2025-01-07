@@ -76,11 +76,11 @@ app.listen(3000, () => {
      "file": {
        "contents": "
 {
-   \"name\": \"express-app\",
-   \"version\": \"1.0.0\",
-   \"main\": \"app.js\",
-   \"dependencies\": {
-       \"express\": \"^4.21.2\"
+   "name": "express-app",
+   "version": "1.0.0",
+   "main": "app.js",
+   "dependencies": {
+       "express": "^4.21.2"
    }
 }
        "

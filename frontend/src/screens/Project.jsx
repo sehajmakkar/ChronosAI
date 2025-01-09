@@ -11,8 +11,9 @@ import { UserContext } from "../context/user.context";
 // npm library used to convert markdown to jsx as we get response from AI in markdown mostly.
 import Markdown from "markdown-to-jsx";
 
-import hljs from 'highlight.js';
-import 'highlight.js/styles/github.css'; // You can use any available theme
+import hljs from "highlight.js";
+import "highlight.js/styles/tomorrow-night-bright.css";
+ // You can use any available theme
 
 import { getWebContainer } from "../config/webContainer";
 
@@ -129,11 +130,11 @@ const Project = () => {
   useEffect(() => {
     initializeSocket(project._id);
 
-    if(!webContainer) {
-      getWebContainer().then(container => {
+    if (!webContainer) {
+      getWebContainer().then((container) => {
         setWebContainer(container);
         console.log("container created");
-      })
+      });
     }
 
     recieveMessage("project-message", (data) => {
@@ -276,8 +277,10 @@ const Project = () => {
 
       <section className="right bg-slate-200 h-full flex-grow flex ">
         <div className="explorer h-full min-w-52 bg-slate-700 overflow-y-auto">
-        <h2 className="p-4 text-lg font-semibold bg-gray-900 shadow-md text-white">File Explorer</h2>
-  
+          <h2 className="p-4 text-lg font-semibold bg-gray-900 shadow-md text-white">
+            File Explorer
+          </h2>
+
           <div className="file-tree w-full p-2">
             {Object.keys(fileTree).map((file, index) => {
               return (
@@ -335,13 +338,40 @@ const Project = () => {
             </div>
 
             <div className="bottom flex flex-grow p-2 overflow-hidden">
-              {fileTree[currentFile] && (
-                <textarea
-                  value={fileTree[currentFile].file.contents}
-                  onChange={handleTextAreaChange}
-                  className="w-full h-full p-4 bg-slate-50 outline-none"
-                ></textarea>
-              )}
+              <div className="code-editor-area h-full overflow-auto flex-grow ">
+                <pre className="hljs h-full ">
+                  <code
+                    className="hljs h-full outline-none"
+                    contentEditable
+                    suppressContentEditableWarning
+                    onBlur={(e) => {
+                      const updatedContent = e.target.innerText;
+                      setFileTree((prevFileTree) => ({
+                        ...prevFileTree,
+                        [currentFile]: {
+                          ...prevFileTree[currentFile],
+                          file: {
+                            ...prevFileTree[currentFile].file,
+                            contents: updatedContent,
+                          },
+                        },
+                      }));
+                    }}
+                    dangerouslySetInnerHTML={{
+                      __html: hljs.highlight(
+                        "javascript",
+                        fileTree[currentFile]?.file?.contents,
+                        { language: "markdown" }
+                      ).value,
+                    }}
+                    style={{
+                      whiteSpace: "pre-wrap",
+                      paddingBottom: "25rem",
+                      counterSet: "line-numbering",
+                    }}
+                  />
+                </pre>
+              </div>
             </div>
           </div>
         )}

@@ -9,13 +9,5 @@ export default defineConfig({
       "Cross-Origin-Embedder-Policy": "require-corp",
       "Cross-Origin-Opener-Policy": "same-origin",
     },
-    // when we will use hljs to highight then we will use this
-    // proxy: {
-    //   "/cdn": {
-    //     target: "http://unpkg.com",
-    //     changeOrigin: true,
-    //     rewrite: (path) => path.replace(/^\/cdn/, ""),
-    //   },
-    // }
   },
 });

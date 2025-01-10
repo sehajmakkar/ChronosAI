@@ -152,6 +152,58 @@ const Project = () => {
     }
   };
 
+  async function mountAndRunFiles(webContainer, fileTree) {
+    try {
+      // First, mount all files from fileTree to the webContainer
+      const files = {};
+      for (const [filename, content] of Object.entries(fileTree)) {
+        files[filename] = {
+          file: {
+            contents: content.file.contents
+          }
+        };
+      }
+      
+      // Mount the files
+      await webContainer.mount(files);
+  
+      // Wait a moment for files to be properly mounted
+      await new Promise(resolve => setTimeout(resolve, 100));
+  
+      // Install dependencies
+      console.log('Installing dependencies...');
+      const installProcess = await webContainer.spawn('npm', ['install']);
+      installProcess.output.pipeTo(
+        new WritableStream({
+          write(chunk) {
+            console.log('Install output:', chunk);
+          }
+        })
+      );
+      
+      // Wait for install to complete
+      const installExit = await installProcess.exit;
+      
+      if (installExit !== 0) {
+        throw new Error('npm install failed');
+      }
+  
+      // Run the application
+      console.log('Starting application...');
+      const runProcess = await webContainer.spawn('npm', ['start']);
+      runProcess.output.pipeTo(
+        new WritableStream({
+          write(chunk) {
+            console.log('Run output:', chunk);
+          }
+        })
+      );
+  
+    } catch (error) {
+      console.error('Error in mountAndRunFiles:', error);
+    }
+  }
+
   useEffect(() => {
     initializeSocket(project._id);
 
@@ -324,10 +376,11 @@ const Project = () => {
           </div>
         </div>
 
-        {currentFile && (
+
           <div className="code-editor flex flex-col flex-grow h-full max-w-full">
             <div className="tabs-container h-14 min-h-[56px] bg-gray-100">
-              <div className="tabs-scroll-area flex overflow-x-auto whitespace-nowrap p-2 no-scrollbar">
+              <div className="tabs-scroll-area flex overflow-x-auto whitespace-nowrap p-2 no-scrollbar justify-between">
+                <div className="files flex">
                 {openFiles.map((file, index) => (
                   <div
                     key={index}
@@ -359,6 +412,21 @@ const Project = () => {
                     </button>
                   </div>
                 ))}
+                </div>
+                <div className="actions flex gap-2">
+                  <button
+                  className="run px-4 py-2 bg-gray-300 rounded-md hover:bg-gray-400"
+                  onClick={async () => {
+                    if (!webContainer || !fileTree) {
+                      console.error('WebContainer or fileTree not available');
+                      return;
+                    }
+                    await mountAndRunFiles(webContainer, fileTree);
+                  }}
+                  >
+                    RUN
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -398,7 +466,7 @@ const Project = () => {
               </div>
             </div>
           </div>
-        )}
+        
       </section>
 
       {/* Modal */}

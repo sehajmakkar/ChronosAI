@@ -138,9 +138,11 @@ except requests.exceptions.RequestException as e:
 }
 
 IMPORTANT:
--DO NOT RETURN FOLDERS! RETURN THE FILES INSIDE THEM IN "folderName/fileName" FORMAT
+-Always include package.json file that contains all the dependencies required with all development related prommpts.
+- Do not use filenames like "routes/index.js" or "routes/api.js" or "public/index.js" or "public/api.js" or "src/app.js" or "src/projects.js". Use filenames directly.
+-DO NOT RETURN FOLDERS OR RETURN THE FILES INSIDE THEM IN "folderName/fileName" FORMAT. ONLY RETURN IN "FILENAME.EXTENSION" FORMAT. dont use filenames like "routes/index.js" or "routes/api.js"
 - ALWAYS have a "text" field and a detailed "fileTree" field in your response that describes the response for a code you return.
-- Do not return folders, return files only. But if you have a folder structure, return individual files with filenames as public/index.html and public/css/style.css and public/js/script.js. (public is a folder in which these are the files). Return like this not return the folder.
+- Do not return folders, return files only. But if you have a folder structure, return individual files with filenames as "FILENAME.EXTENSION". Return like this not return the folder. Don't use filenames like "routes/index.js" or "routes/api.js"
 - Include the startCommands, Build Commands and install Commands in the "text" field concisely and do not include filetree in the "text" field.
 - Always ensure responses are tailored to the user's query and skill level.
 - Adapt your tone and depth of explanation based on user expertise (beginner, intermediate, advanced).

@@ -13,7 +13,7 @@ import Markdown from "markdown-to-jsx";
 
 import hljs from "highlight.js";
 import "highlight.js/styles/tomorrow-night-bright.css";
- // You can use any available theme
+// You can use any available theme
 
 import { getWebContainer } from "../config/webContainer";
 
@@ -125,6 +125,31 @@ const Project = () => {
         },
       },
     });
+  };
+
+  const getLanguageFromFileName = (fileName) => {
+    const extension = fileName.split(".").pop().toLowerCase();
+    const extensionToLanguage = {
+      js: "javascript",
+      jsx: "javascript",
+      py: "python",
+      html: "html",
+      css: "css",
+      json: "json",
+      // Add more mappings as needed
+    };
+    return extensionToLanguage[extension] || "plaintext";
+  };
+
+  const highlightCode = (content, fileName) => {
+    if (!content) return "";
+    try {
+      const language = getLanguageFromFileName(fileName);
+      return hljs.highlight(content, { language }).value;
+    } catch (error) {
+      console.error("Highlighting error:", error);
+      return content; // Return unhighlighted content as fallback
+    }
   };
 
   useEffect(() => {
@@ -339,7 +364,7 @@ const Project = () => {
 
             <div className="bottom flex flex-grow p-2 overflow-hidden">
               <div className="code-editor-area h-full overflow-auto flex-grow ">
-                <pre className="hljs h-full ">
+                <pre className="hljs h-full">
                   <code
                     className="hljs h-full outline-none"
                     contentEditable
@@ -351,18 +376,17 @@ const Project = () => {
                         [currentFile]: {
                           ...prevFileTree[currentFile],
                           file: {
-                            ...prevFileTree[currentFile].file,
+                            ...prevFileTree[currentFile]?.file,
                             contents: updatedContent,
                           },
                         },
                       }));
                     }}
                     dangerouslySetInnerHTML={{
-                      __html: hljs.highlight(
-                        "javascript",
-                        fileTree[currentFile]?.file?.contents,
-                        { language: "markdown" }
-                      ).value,
+                      __html: highlightCode(
+                        fileTree[currentFile]?.file?.contents || "",
+                        currentFile
+                      ),
                     }}
                     style={{
                       whiteSpace: "pre-wrap",

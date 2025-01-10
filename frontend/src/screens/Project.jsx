@@ -41,6 +41,10 @@ const Project = () => {
 
   const [webContainer, setWebContainer] = useState(null);
 
+  const [iFrameURL, setIframeURL] = useState(null);
+
+  const [runProcess, setRunProcess] = useState(null);
+
   // Predefined default images
   const defaultImages = [
     "bulba1.jpg",
@@ -187,17 +191,28 @@ const Project = () => {
       if (installExit !== 0) {
         throw new Error('npm install failed');
       }
+
+      if(runProcess) {
+        runProcess.kill();
+      }
   
       // Run the application
       console.log('Starting application...');
-      const runProcess = await webContainer.spawn('npm', ['start']);
-      runProcess.output.pipeTo(
+      let tempRunProcess = await webContainer.spawn('npm', ['start']);
+      tempRunProcess.output.pipeTo(
         new WritableStream({
           write(chunk) {
             console.log('Run output:', chunk);
           }
         })
       );
+
+      setRunProcess(tempRunProcess);
+
+      webContainer?.on('server-ready', (port,url) => {
+        console.log(port,url)
+        setIframeURL(url);
+      })
   
     } catch (error) {
       console.error('Error in mountAndRunFiles:', error);
@@ -466,6 +481,26 @@ const Project = () => {
               </div>
             </div>
           </div>
+
+          {iFrameURL && webContainer && (
+            <div className="flex min-w-72 flex-col h-full ">
+              <div className="addressBar">
+                <input type="text"
+                className="w-full p-2 px-4 bg-slate-900 text-white outline-none"
+                value={iFrameURL}
+                onChange={(e) => setIframeURL(e.target.value)}
+                />
+              </div>
+              <iframe
+              src={iFrameURL}
+              title="WebContainer"
+              className="w-full h-full"
+            >
+              </iframe>
+            </div>
+
+
+          )}
         
       </section>
 

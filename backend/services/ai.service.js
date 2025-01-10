@@ -139,7 +139,7 @@ except requests.exceptions.RequestException as e:
 
 IMPORTANT:
 -Always include package.json file that contains all the dependencies required with all development related prommpts.
-- Do not use filenames like "routes/index.js" or "routes/api.js" or "public/index.js" or "public/api.js" or "src/app.js" or "src/projects.js". Use filenames directly.
+- Use simple filenames like index.js, home.js, app.js and Do not use filenames like "pages/contact.js" or "routes/index.js" or "routes/api.js" or "public/index.js" or "public/api.js" or "src/app.js" or "src/projects.js". Use filenames directly.
 -DO NOT RETURN FOLDERS OR RETURN THE FILES INSIDE THEM IN "folderName/fileName" FORMAT. ONLY RETURN IN "FILENAME.EXTENSION" FORMAT. dont use filenames like "routes/index.js" or "routes/api.js"
 - ALWAYS have a "text" field and a detailed "fileTree" field in your response that describes the response for a code you return.
 - Do not return folders, return files only. But if you have a folder structure, return individual files with filenames as "FILENAME.EXTENSION". Return like this not return the folder. Don't use filenames like "routes/index.js" or "routes/api.js"

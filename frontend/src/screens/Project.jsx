@@ -219,6 +219,21 @@ const Project = () => {
     }
   }
 
+  function saveFileTree(ft) {
+    axios
+      .put("/projects/update-file-tree", {
+        projectId: project._id,
+        fileTree: ft,
+      })
+      .then((res) => {
+        console.log(res.data);
+      })
+      .catch((err) => {
+        console.log(fileTree)
+        console.log(err)
+      });
+  }
+
   useEffect(() => {
     initializeSocket(project._id);
 
@@ -250,8 +265,11 @@ const Project = () => {
       .then((res) => {
         console.log(res.data.project);
         setProject(res.data.project);
+        setFileTree(res.data.project.fileTree);
       })
-      .catch((err) => {});
+      .catch((err) => {
+        console.log(err.response.data);
+      });
 
     axios
       .get("/users/all")
@@ -454,16 +472,29 @@ const Project = () => {
                     suppressContentEditableWarning
                     onBlur={(e) => {
                       const updatedContent = e.target.innerText;
-                      setFileTree((prevFileTree) => ({
-                        ...prevFileTree,
+
+                      const ft = {
+                        ...fileTree,
                         [currentFile]: {
-                          ...prevFileTree[currentFile],
                           file: {
-                            ...prevFileTree[currentFile]?.file,
                             contents: updatedContent,
                           },
                         },
-                      }));
+                      };
+                      setFileTree(ft);
+                      saveFileTree(ft);
+
+                      // setFileTree((prevFileTree) => ({
+                      //   ...prevFileTree,
+                      //   [currentFile]: {
+                      //     ...prevFileTree[currentFile],
+                      //     file: {
+                      //       ...prevFileTree[currentFile]?.file,
+                      //       contents: updatedContent,
+                      //     },
+                      //   },
+                      // }));
+
                     }}
                     dangerouslySetInnerHTML={{
                       __html: highlightCode(

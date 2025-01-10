@@ -72,18 +72,36 @@ export const addUserToProject = async (req, res) => {
 };
 
 export const getProjectById = async (req, res) => {
+  const { projectId } = req.params;
 
-  const {projectId} = req.params;
-
-  try{
-
+  try {
     const project = await projectService.getProjectById({ projectId });
 
     res.status(200).json({ project });
-
   } catch (err) {
     console.log(err);
     res.status(400).json({ error: err.message });
   }
+};
 
+export const updateFileTree = async (req, res) => {
+  const errors = validationResult(req);
+
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
+  try {
+    const { projectId, fileTree } = req.body;
+
+    const project = await projectService.updateFileTree({
+      projectId,
+      fileTree,
+    })
+
+    res.status(200).json({ project });
+  } catch (err) {
+    console.log(err);
+    res.status(400).json({ error: err.message });
+  }
 };

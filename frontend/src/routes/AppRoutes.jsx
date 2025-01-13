@@ -5,12 +5,16 @@ import SignupPage from '../screens/Register.jsx'
 import Home from '../screens/Home.jsx'
 import Project from '../screens/Project.jsx'
 import UserAuth from '../auth/UserAuth.jsx'
+import Landing from '../screens/Landing.jsx'
 
 const AppRoutes = () => {
   return (
    <BrowserRouter>
     <Routes>
-      <Route path="/" element={
+    <Route path="/" element={
+        <Landing />
+      } />
+      <Route path="/home" element={
         //<UserAuth>
           <Home/>
         //</UserAuth>

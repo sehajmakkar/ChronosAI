@@ -30,7 +30,7 @@ const Project = () => {
   const [selectedUserId, setSelectedUserId] = useState([]); // State for selected user ID
 
   const [users, setUsers] = useState([]);
-  const [project, setProject] = useState(location.state);
+  const [project, setProject] = useState(location.state || {});
 
   const [messages, setMessages] = useState([]);
 
@@ -392,7 +392,7 @@ const Project = () => {
           </h2>
 
           <div className="file-tree w-full p-2">
-            {Object.keys(fileTree).map((file, index) => {
+            {fileTree && Object.keys(fileTree).map((file, index) => {
               return (
                 <button
                   key={index}
@@ -497,10 +497,9 @@ const Project = () => {
 
                     }}
                     dangerouslySetInnerHTML={{
-                      __html: highlightCode(
-                        fileTree[currentFile]?.file?.contents || "",
-                        currentFile
-                      ),
+                      __html: currentFile && fileTree[currentFile]?.file?.contents 
+                        ? highlightCode(fileTree[currentFile].file.contents, currentFile)
+                        : "",
                     }}
                     style={{
                       whiteSpace: "pre-wrap",

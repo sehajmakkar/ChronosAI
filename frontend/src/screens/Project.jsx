@@ -107,13 +107,22 @@ const Project = () => {
   const messageBox = React.createRef();
 
   function writeAiMessage(message) {
-    const msgObject = JSON.parse(message);
-
-    return (
-      <div className="overflow-auto bg-slate-950 text-white rounded-sm p-2">
-        <Markdown>{msgObject.text}</Markdown>
-      </div>
-    );
+    try {
+      // Try to parse as JSON first
+      const msgObject = JSON.parse(message);
+      return (
+        <div className="overflow-auto bg-slate-950 text-white rounded-sm p-2">
+          <Markdown>{msgObject.text}</Markdown>
+        </div>
+      );
+    } catch (error) {
+      // If parsing fails, treat as plain text
+      return (
+        <div className="overflow-auto bg-slate-950 text-white rounded-sm p-2">
+          <Markdown>{message}</Markdown>
+        </div>
+      );
+    }
   }
 
   function scrollToBottom() {
@@ -245,19 +254,29 @@ const Project = () => {
     }
 
     recieveMessage("project-message", (data) => {
-      console.log(JSON.parse(data.message));
-      const message = JSON.parse(data.message);
+      let messageContent = data.message;
+      let fileTreeData = null;
 
-      webContainer?.mount(message.fileTree);
-
-      if (message.fileTree) {
-        setFileTree(message.fileTree);
+      try {
+        // Try to parse the message as JSON
+        const parsedMessage = JSON.parse(data.message);
+        messageContent = parsedMessage.text || data.message;
+        
+        // If the message contains a fileTree, handle it
+        if (parsedMessage.fileTree) {
+          fileTreeData = parsedMessage.fileTree;
+          webContainer?.mount(fileTreeData);
+          setFileTree(fileTreeData);
+        }
+      } catch (error) {
+        // If parsing fails, use the message as is (plain text)
+        messageContent = data.message;
       }
 
       setMessages((prevMessages) => [
         ...prevMessages,
-        { message: data.message, sender: data.sender },
-      ]); // add new incoming message to state
+        { message: messageContent, sender: data.sender },
+      ]);
     });
 
     axios

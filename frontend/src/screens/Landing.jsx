@@ -82,7 +82,8 @@ function App() {
 
             {/* Right Side - Spline Model */}
             <div className="relative h-[600px] lg:h-screen mr-10">
-              <Spline scene="https://prod.spline.design/uU9o4wHq1IVf7csq/scene.splinecode" />
+              <Spline scene="https://prod.spline.design/kZDDjO5HuC9GJUM2/scene.splinecode" />
+              {/* with spline logo and colors, link: https://prod.spline.design/uU9o4wHq1IVf7csq/scene.splinecode */}
             </div>
           </div>
         </div>

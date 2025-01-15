@@ -39,7 +39,7 @@ function App() {
       }`}>
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <div href="/" className="flex items-center space-x-2">
+            <div onClick={() => navigate('/')} className="flex items-center space-x-2 cursor-pointer">
               <Zap className="w-6 h-6 text-cyan-400" />
               <span className="text-xl font-bold text-white">ChronosAI</span>
             </div>

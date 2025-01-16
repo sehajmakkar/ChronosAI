@@ -91,18 +91,28 @@ const Project = () => {
   }
 
   const [message, setMessage] = useState("");
-  function send() {
-    // client to server to the particular room in which user is present.
-    sendMessage("project-message", {
-      message,
-      // sender from userContext
-      sender: user,
-    });
+  const send = async () => {
+    // Save message to database first
+    try {
+      await axios.post('/projects/messages', {
+        projectId: project._id,
+        message,
+        sender: user
+      });
 
-    setMessages((prevMessages) => [...prevMessages, { sender: user, message }]); // add new outgoing message to state
+      // Only send through socket after successful save
+      sendMessage('project-message', {
+        message,
+        sender: user,
+        timestamp: new Date() // Adding timestamp to help identify unique messages
+      });
 
-    setMessage("");
-  }
+      setMessages(prevMessages => [...prevMessages, { sender: user, message }]);
+      setMessage('');
+    } catch (err) {
+      console.error('Error saving message:', err);
+    }
+  };
 
   const messageBox = React.createRef();
 
@@ -244,61 +254,78 @@ const Project = () => {
   }
 
   useEffect(() => {
-    initializeSocket(project._id);
-
-    if (!webContainer) {
-      getWebContainer().then((container) => {
-        setWebContainer(container);
-        console.log("container created");
-      });
-    }
-
-    recieveMessage("project-message", (data) => {
-      let messageContent = data.message;
-      let fileTreeData = null;
-
+    const loadProjectData = async () => {
       try {
-        // Try to parse the message as JSON
-        const parsedMessage = JSON.parse(data.message);
-        messageContent = parsedMessage.text || data.message;
-        
-        // If the message contains a fileTree, handle it
-        if (parsedMessage.fileTree) {
-          fileTreeData = parsedMessage.fileTree;
-          webContainer?.mount(fileTreeData);
-          setFileTree(fileTreeData);
+        initializeSocket(project._id);
+
+        if (!webContainer) {
+          const container = await getWebContainer();
+          setWebContainer(container);
+          console.log('container created');
         }
+
+        // Load existing messages
+        const messagesResponse = await axios.get(`/projects/messages/${project._id}`);
+        setMessages(messagesResponse.data.messages);
+
+        // Load project details including fileTree
+        const projectResponse = await axios.get(`/projects/get-project/${project._id}`);
+        console.log(projectResponse.data.project);
+        setProject(projectResponse.data.project);
+        if (projectResponse.data.project.fileTree) {
+          setFileTree(projectResponse.data.project.fileTree);
+        }
+
+        // Socket message handler
+        recieveMessage('project-message', async (data) => {
+          let messageContent = data.message;
+          let fileTreeData = null;
+
+          try {
+            const parsedMessage = JSON.parse(data.message);
+            messageContent = parsedMessage.text || data.message;
+            
+            if (parsedMessage.fileTree) {
+              fileTreeData = parsedMessage.fileTree;
+              webContainer?.mount(fileTreeData);
+              setFileTree(fileTreeData);
+              
+              // Save fileTree to database when received from AI
+              try {
+                await axios.put('/projects/update-file-tree', {
+                  projectId: project._id,
+                  fileTree: fileTreeData
+                });
+              } catch (err) {
+                console.error('Error saving fileTree:', err);
+              }
+            }
+          } catch (error) {
+            messageContent = data.message;
+          }
+
+          // DONT Save received message to database, ONLY SHOW IN UI, ONLY SAVE SENT MESSAGES IN DB!
+          // try {
+          //   await axios.post('/projects/messages', {
+          //     projectId: project._id,
+          //     message: messageContent,
+          //     sender: data.sender
+          //   });
+          // } catch (err) {
+          //   console.error('Error saving message:', err);
+          // }
+
+          setMessages(prevMessages => [
+            ...prevMessages,
+            { message: messageContent, sender: data.sender }
+          ]);
+        });
       } catch (error) {
-        // If parsing fails, use the message as is (plain text)
-        messageContent = data.message;
+        console.error('Error loading project data:', error);
       }
+    };
 
-      setMessages((prevMessages) => [
-        ...prevMessages,
-        { message: messageContent, sender: data.sender },
-      ]);
-    });
-
-    axios
-      .get(`/projects/get-project/${location.state._id}`)
-      .then((res) => {
-        console.log(res.data.project);
-        setProject(res.data.project);
-        setFileTree(res.data.project.fileTree);
-      })
-      .catch((err) => {
-        console.log(err.response.data);
-      });
-
-    axios
-      .get("/users/all")
-      .then((res) => {
-        console.log(res);
-        setUsers(res.data.allUsers);
-      })
-      .catch((err) => {
-        console.log(err.response.data);
-      });
+    loadProjectData();
   }, []);
 
   return (

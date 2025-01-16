@@ -1,5 +1,17 @@
 import mongoose from "mongoose";
 
+const messageSchema = new mongoose.Schema({
+  sender: {
+    _id: String,
+    email: String
+  },
+  message: String,
+  timestamp: {
+    type: Date,
+    default: Date.now
+  }
+});
+
 const projectSchema = new mongoose.Schema({
   name:{
     type: String,
@@ -20,6 +32,13 @@ const projectSchema = new mongoose.Schema({
     type: Object, 
     default: {}
   },
+
+  messages: [messageSchema],
+  lastUpdated: {
+    type: Date,
+    default: Date.now
+  },
+
 });
 
 const Project = mongoose.model("project", projectSchema);

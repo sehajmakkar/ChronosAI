@@ -8,6 +8,8 @@ import {
 } from "../config/socket";
 import { UserContext } from "../context/user.context";
 
+import { MessageSquare, Users, Zap, Play, X, Send, ChevronRight } from 'lucide-react';
+
 // npm library used to convert markdown to jsx as we get response from AI in markdown mostly.
 import Markdown from "markdown-to-jsx";
 
@@ -74,6 +76,27 @@ const Project = () => {
   };
 
   //console.log(selectedUserId);
+
+  const fetchUsers = async () => {
+    try {
+      console.log('Fetching users...');
+      const response = await axios.get('/users/all');
+      console.log(response.data);
+      const filteredUsers = response.data.allUsers.filter(u => 
+        u._id !== user._id && 
+        !project.users?.some(pu => pu._id === u._id)
+      );
+      setUsers(filteredUsers);
+    } catch (err) {
+      console.error('Error fetching users:', err);
+    }
+  };
+
+  useEffect(() => {
+    if (modalOpen) {
+      fetchUsers();
+    }
+  }, [modalOpen]);
 
   function addCollaborators() {
     axios
@@ -254,97 +277,110 @@ const Project = () => {
   }
 
   useEffect(() => {
-    const loadProjectData = async () => {
-      try {
-        initializeSocket(project._id);
+  const loadProjectData = async () => {
+    try {
+      initializeSocket(project._id);
 
-        if (!webContainer) {
-          const container = await getWebContainer();
-          setWebContainer(container);
-          console.log('container created');
-        }
-
-        // Load existing messages
-        const messagesResponse = await axios.get(`/projects/messages/${project._id}`);
-        setMessages(messagesResponse.data.messages);
-
-        // Load project details including fileTree
-        const projectResponse = await axios.get(`/projects/get-project/${project._id}`);
-        console.log(projectResponse.data.project);
-        setProject(projectResponse.data.project);
-        if (projectResponse.data.project.fileTree) {
-          setFileTree(projectResponse.data.project.fileTree);
-        }
-
-        // Socket message handler
-        recieveMessage('project-message', async (data) => {
-          let messageContent = data.message;
-          let fileTreeData = null;
-
-          try {
-            const parsedMessage = JSON.parse(data.message);
-            messageContent = parsedMessage.text || data.message;
-            
-            if (parsedMessage.fileTree) {
-              fileTreeData = parsedMessage.fileTree;
-              webContainer?.mount(fileTreeData);
-              setFileTree(fileTreeData);
-              
-              // Save fileTree to database when received from AI
-              try {
-                await axios.put('/projects/update-file-tree', {
-                  projectId: project._id,
-                  fileTree: fileTreeData
-                });
-              } catch (err) {
-                console.error('Error saving fileTree:', err);
-              }
-            }
-          } catch (error) {
-            messageContent = data.message;
-          }
-
-          // DONT Save received message to database, ONLY SHOW IN UI, ONLY SAVE SENT MESSAGES IN DB!
-          // try {
-          //   await axios.post('/projects/messages', {
-          //     projectId: project._id,
-          //     message: messageContent,
-          //     sender: data.sender
-          //   });
-          // } catch (err) {
-          //   console.error('Error saving message:', err);
-          // }
-
-          setMessages(prevMessages => [
-            ...prevMessages,
-            { message: messageContent, sender: data.sender }
-          ]);
-        });
-      } catch (error) {
-        console.error('Error loading project data:', error);
+      if (!webContainer) {
+        const container = await getWebContainer();
+        setWebContainer(container);
+        console.log('container created');
       }
-    };
 
-    loadProjectData();
-  }, []);
+      // Load existing messages
+      const messagesResponse = await axios.get(`/projects/messages/${project._id}`);
+      setMessages(messagesResponse.data.messages);
+
+      // Load project details including fileTree
+      const projectResponse = await axios.get(`/projects/get-project/${project._id}`);
+      console.log(projectResponse.data.project);
+      setProject(projectResponse.data.project);
+      if (projectResponse.data.project.fileTree) {
+        setFileTree(projectResponse.data.project.fileTree);
+      }
+
+      // Socket message handler
+      recieveMessage('project-message', async (data) => {
+        let messageContent = data.message;
+        let fileTreeData = null;
+
+        try {
+          const parsedMessage = JSON.parse(data.message);
+          messageContent = parsedMessage.text || data.message;
+          
+          if (parsedMessage.fileTree) {
+            fileTreeData = parsedMessage.fileTree;
+            webContainer?.mount(fileTreeData);
+            setFileTree(fileTreeData);
+            
+            // Save fileTree to database when received from AI
+            try {
+              await axios.put('/projects/update-file-tree', {
+                projectId: project._id,
+                fileTree: fileTreeData
+              });
+            } catch (err) {
+              console.error('Error saving fileTree:', err);
+            }
+          }
+        } catch (error) {
+          messageContent = data.message;
+        }
+
+        // Save AI message to database
+        try {
+          if (data.sender._id === "ai") {
+            await axios.post('/projects/messages', {
+              projectId: project._id,
+              message: messageContent,
+              sender: {
+                _id: "ai",
+                email: "ChronosAI"
+              }
+            });
+          }
+        } catch (err) {
+          console.error('Error saving AI message:', err);
+        }
+
+        setMessages(prevMessages => [
+          ...prevMessages,
+          { message: messageContent, sender: data.sender }
+        ]);
+      });
+    } catch (error) {
+      console.error('Error loading project data:', error);
+    }
+  };
+
+  loadProjectData();
+}, []);
 
   return (
-    <main className="h-screen w-screen flex">
-      <section className="left flex flex-col h-full min-w-80  bg-slate-200">
-        <header className="flex w-full justify-between p-2 px-4 bg-slate-100 items-center">
-          <button className="flex gap-2" onClick={() => setModalOpen(true)}>
-            <i className="ri-add-fill"></i>
-            <p>Add Collaborators</p>
+    <main className="h-screen w-screen flex bg-slate-950">
+      {/* Left Section */}
+      <section className="left flex flex-col h-full min-w-80 bg-slate-900 border-r border-cyan-900/30">
+        <header className="flex w-full justify-between p-3 px-4 bg-slate-800/50 items-center border-b border-cyan-900/30">
+          <button 
+            className="flex gap-2 items-center text-cyan-400 hover:text-cyan-300 transition-colors duration-200" 
+            onClick={() => setModalOpen(true)}
+          >
+            <Users size={18} />
+            <p className="text-sm font-medium">Add Collaborators</p>
           </button>
-
-          <button className="p-2" onClick={() => setPanel(true)}>
-            <i className="ri-group-fill"></i>
+  
+          <button 
+            className="p-2 text-cyan-400 hover:text-cyan-300 transition-colors duration-200" 
+            onClick={() => setPanel(true)}
+          >
+            <MessageSquare size={18} />
           </button>
         </header>
-
+  
         <div
-          className="conversation-area flex-grow flex flex-col overflow-y-auto p-2 scrollbar-hide"
+          className="conversation-area max-w-96 flex-grow flex flex-col overflow-y-auto p-3 scrollbar-hide"
           ref={messageBox}
+          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
         >
           <div className="message-box flex flex-col gap-3">
             {messages.map((message, index) => {
@@ -353,76 +389,71 @@ const Project = () => {
               return (
                 <div
                   key={index}
-                  className={`message max-w-64 flex flex-col p-3 rounded-md shadow-md break-words ${
+                  className={`message flex flex-col p-3 rounded-lg shadow-lg break-words transition-all duration-300 hover:shadow-cyan-900/20 animate-fadeIn ${
                     isOutgoing
-                      ? "max-w-60 bg-green-100 text-green-800 self-end"
+                      ? "bg-cyan-900/30 text-cyan-100 self-end ml-12"
                       : isAIMessage
-                      ? "bg-gray-800 text-white self-start max-w-md"
-                      : "bg-gray-100 text-gray-800 self-start"
+                      ? "bg-slate-800 text-slate-100 self-start mr-12 border border-cyan-900/20"
+                      : "bg-slate-800/50 text-slate-200 self-start mr-12 border border-slate-700"
                   }`}
+                  style={{ maxWidth: '75%' }}
                 >
-                  <small className="opacity-75 text-xs">
+                  <small className={`opacity-75 text-xs font-medium mb-1 ${isOutgoing ? 'text-right' : 'text-left'}`}>
                     {message.sender.email}
                   </small>
-                  <p className="text-sm">
-                    {message.sender._id === "ai"
-                      ? writeAiMessage(message.message)
-                      : message.message}
-                  </p>
+                  <div className={`text-sm leading-relaxed ${isOutgoing ? 'text-right' : 'text-left'}`}>
+                    {message.sender._id === "ai" ? writeAiMessage(message.message) : message.message}
+                  </div>
                 </div>
               );
             })}
           </div>
         </div>
-
-        <div className="input-field w-full flex">
+  
+        <div className="input-field w-full flex p-3 bg-slate-900/50 border-t border-cyan-900/30">
           <input
             type="text"
             placeholder="Use @ai to ask AI..."
-            className="p-2 px-4 border border-gray-300 rounded-l-md flex-grow outline-none"
+            className="p-2 px-4 bg-slate-800 text-slate-200 border border-slate-700 rounded-l-lg flex-grow outline-none focus:border-cyan-600 transition-colors duration-200 placeholder:text-slate-500"
             value={message}
             onChange={(e) => setMessage(e.target.value)}
           />
           <button
-            className="px-5 bg-blue-500 text-white rounded-r-md hover:bg-blue-600"
+            className="px-5 bg-cyan-600 text-white rounded-r-lg hover:bg-cyan-500 transition-colors duration-200 flex items-center justify-center"
             onClick={send}
           >
-            <i className="ri-send-plane-fill"></i>
+            <Send size={18} />
           </button>
         </div>
-
-        {/* side panel */}
+  
+        {/* Side Panel */}
         <div
-          className={`sidePanel fixed top-0 left-0 h-full bg-white shadow-lg z-50 transform ${
+          className={`sidePanel fixed top-0 left-0 h-full bg-slate-900 shadow-xl z-50 transform ${
             panel ? "translate-x-0" : "-translate-x-full"
-          } transition-transform duration-300 ease-in-out`}
+          } transition-all duration-300 ease-in-out border-r border-cyan-900/30`}
           style={{ width: "300px" }}
         >
-          <div className="p-4 flex justify-between items-center bg-slate-100">
-            <h2 className="text-lg font-bold">Collaborators</h2>
-            <button onClick={() => setPanel(false)} className="text-lg">
-              <i className="ri-close-line"></i>
+          <div className="p-4 flex justify-between items-center bg-slate-800/50 border-b border-cyan-900/30">
+            <h2 className="text-lg font-bold text-cyan-100 uppercase">{project.name}</h2>
+            <button onClick={() => setPanel(false)} className="text-cyan-400 hover:text-cyan-300 transition-colors duration-200">
+              <X size={18} />
             </button>
           </div>
-          <div
-            className="p-4"
-            style={{ maxHeight: "calc(100vh - 100px)", overflowY: "auto" }}
-          >
-            {/* side panel ki mapping */}
+          <div className="p-4" style={{ maxHeight: "calc(100vh - 100px)", overflowY: "auto" }}>
             {project.users &&
               project.users.map((user, index) => (
                 <div
                   key={user._id}
-                  className={`flex items-center p-2 rounded-md mb-2 shadow-sm ${
+                  className={`flex items-center p-3 rounded-lg mb-2 shadow-lg ${
                     selectedUserId === user._id
-                      ? "bg-blue-300"
-                      : "bg-slate-200 hover:bg-slate-300"
-                  } transition-colors duration-200`}
+                      ? "bg-cyan-900/30 text-cyan-100"
+                      : "bg-slate-800/50 text-slate-200 hover:bg-slate-800 border border-slate-700"
+                  } transition-all duration-200`}
                 >
                   <img
-                    src={userImages[index]}
+                    src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmZmZmYiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBjbGFzcz0ibHVjaWRlIGx1Y2lkZS11c2VyIj48cGF0aCBkPSJNMTkgMjF2LTJhNCA0IDAgMCAwLTQtNEg5YTQgNCAwIDAgMC00IDR2MiIvPjxjaXJjbGUgY3g9IjEyIiBjeT0iNyIgcj0iNCIvPjwvc3ZnPg=="
                     alt="User"
-                    className="w-10 h-10 rounded-full mr-3"
+                    className="w-10 h-10 p-1 rounded-full mr-3 border-2 border-cyan-600"
                   />
                   <span className="text-sm font-medium">{user.email}</span>
                 </div>
@@ -430,48 +461,54 @@ const Project = () => {
           </div>
         </div>
       </section>
-
-      <section className="right bg-slate-200 h-full flex-grow flex ">
-        <div className="explorer h-full min-w-52 bg-slate-700 overflow-y-auto">
-          <h2 className="p-4 text-lg font-semibold bg-gray-900 shadow-md text-white">
+  
+      {/* Right Section */}
+      <section className="right bg-slate-950 h-full flex-grow flex">
+        <div className="explorer h-full min-w-52 bg-slate-900 border-r border-cyan-900/30">
+          <h2 className="p-4 text-lg font-semibold bg-slate-800/50 text-cyan-100 border-b border-cyan-900/30 flex items-center gap-2">
+            <Zap size={18} className="text-cyan-400" />
             File Explorer
           </h2>
-
-          <div className="file-tree w-full p-2">
-            {fileTree && Object.keys(fileTree).map((file, index) => {
-              return (
-                <button
-                  key={index}
-                  onClick={() => {
-                    setCurrentFile(file);
-                    setOpenFiles([...new Set([...openFiles, file])]);
-                  }}
-                  className="tree-element cursor-pointer p-2 px-4 m-1 flex items-center gap-2 rounded-md bg-slate-200  hover:bg-slate-300"
-                >
-                  <p className="font-semibold text-lg">{file}</p>
-                </button>
-              );
-            })}
+  
+          <div className="file-tree w-full p-2 space-y-1 overflow-y-auto scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+            {fileTree && Object.keys(fileTree).map((file, index) => (
+              <button
+                key={index}
+                onClick={() => {
+                  setCurrentFile(file);
+                  setOpenFiles([...new Set([...openFiles, file])]);
+                }}
+                className="tree-element w-full cursor-pointer p-2.5 flex items-center gap-2 rounded-lg 
+                  bg-gradient-to-r from-slate-800/50 to-slate-800/30 text-slate-200 
+                  hover:from-cyan-900/20 hover:to-slate-800/50 
+                  border border-transparent hover:border-cyan-900/30 
+                  transition-all duration-200 group"
+              >
+                <div className="flex items-center gap-2 w-full">
+                  <ChevronRight size={14} className="text-slate-400 group-hover:text-cyan-400 transition-colors duration-200" />
+                  <p className="font-medium text-sm truncate">{file}</p>
+                </div>
+              </button>
+            ))}
           </div>
         </div>
-
-
-          <div className="code-editor flex flex-col flex-grow h-full max-w-full">
-            <div className="tabs-container h-14 min-h-[56px] bg-gray-100">
-              <div className="tabs-scroll-area flex overflow-x-auto whitespace-nowrap p-2 no-scrollbar justify-between">
-                <div className="files flex">
+  
+        <div className="code-editor flex flex-col flex-grow h-full max-w-full">
+          <div className="tabs-container h-14 min-h-[56px] bg-slate-900 border-b border-cyan-900/30">
+            <div className="tabs-scroll-area flex overflow-x-auto whitespace-nowrap p-2 no-scrollbar justify-between">
+              <div className="files flex gap-2">
                 {openFiles.map((file, index) => (
                   <div
                     key={index}
-                    className={`tab flex-shrink-0 flex items-center gap-2 px-4 py-2 mr-2 rounded-md ${
+                    className={`tab flex-shrink-0 flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 ${
                       currentFile === file
-                        ? "bg-slate-950 text-white"
-                        : "bg-gray-300"
+                        ? "bg-cyan-900/30 text-cyan-100"
+                        : "bg-slate-800 text-slate-300 hover:bg-slate-700"
                     }`}
                   >
                     <span
                       onClick={() => setCurrentFile(file)}
-                      className="cursor-pointer"
+                      className="cursor-pointer text-sm"
                     >
                       {file}
                     </span>
@@ -485,16 +522,16 @@ const Project = () => {
                           updatedFiles.length > 0 ? updatedFiles[0] : null
                         );
                       }}
-                      className="text-gray-500 hover:text-gray-700"
+                      className="text-slate-400 hover:text-slate-200 transition-colors duration-200"
                     >
-                      <i className="ri-close-fill"></i>
+                      <X size={14} />
                     </button>
                   </div>
                 ))}
-                </div>
-                <div className="actions flex gap-2">
-                  <button
-                  className="run px-4 py-2 bg-gray-300 rounded-md hover:bg-gray-400"
+              </div>
+              <div className="actions flex gap-2">
+                <button
+                  className="run px-4 py-2 bg-cyan-600 text-white rounded-lg hover:bg-cyan-500 transition-all duration-200 flex items-center gap-2 text-sm font-medium"
                   onClick={async () => {
                     if (!webContainer || !fileTree) {
                       console.error('WebContainer or fileTree not available');
@@ -502,128 +539,111 @@ const Project = () => {
                     }
                     await mountAndRunFiles(webContainer, fileTree);
                   }}
-                  >
-                    RUN
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <div className="bottom flex flex-grow p-2 overflow-hidden">
-              <div className="code-editor-area h-full overflow-auto flex-grow ">
-                <pre className="hljs h-full">
-                  <code
-                    className="hljs h-full outline-none"
-                    contentEditable
-                    suppressContentEditableWarning
-                    onBlur={(e) => {
-                      const updatedContent = e.target.innerText;
-
-                      const ft = {
-                        ...fileTree,
-                        [currentFile]: {
-                          file: {
-                            contents: updatedContent,
-                          },
-                        },
-                      };
-                      setFileTree(ft);
-                      saveFileTree(ft);
-
-                      // setFileTree((prevFileTree) => ({
-                      //   ...prevFileTree,
-                      //   [currentFile]: {
-                      //     ...prevFileTree[currentFile],
-                      //     file: {
-                      //       ...prevFileTree[currentFile]?.file,
-                      //       contents: updatedContent,
-                      //     },
-                      //   },
-                      // }));
-
-                    }}
-                    dangerouslySetInnerHTML={{
-                      __html: currentFile && fileTree[currentFile]?.file?.contents 
-                        ? highlightCode(fileTree[currentFile].file.contents, currentFile)
-                        : "",
-                    }}
-                    style={{
-                      whiteSpace: "pre-wrap",
-                      paddingBottom: "25rem",
-                      counterSet: "line-numbering",
-                    }}
-                  />
-                </pre>
+                >
+                  <Play size={16} />
+                  RUN
+                </button>
               </div>
             </div>
           </div>
-
-          {iFrameURL && webContainer && (
-            <div className="flex min-w-72 flex-col h-full ">
-              <div className="addressBar">
-                <input type="text"
-                className="w-full p-2 px-4 bg-slate-900 text-white outline-none"
+  
+          <div className="bottom flex flex-grow p-2 overflow-hidden">
+            <div className="code-editor-area h-full overflow-auto flex-grow bg-slate-900 rounded-lg">
+              <pre className="hljs h-full p-4">
+                <code
+                  className="hljs h-full outline-none text-slate-200"
+                  contentEditable
+                  suppressContentEditableWarning
+                  onBlur={(e) => {
+                    const updatedContent = e.target.innerText;
+                    const ft = {
+                      ...fileTree,
+                      [currentFile]: {
+                        file: {
+                          contents: updatedContent,
+                        },
+                      },
+                    };
+                    setFileTree(ft);
+                    saveFileTree(ft);
+                  }}
+                  dangerouslySetInnerHTML={{
+                    __html: currentFile && fileTree[currentFile]?.file?.contents 
+                      ? highlightCode(fileTree[currentFile].file.contents, currentFile)
+                      : "",
+                  }}
+                  style={{
+                    whiteSpace: "pre-wrap",
+                    paddingBottom: "25rem",
+                    counterSet: "line-numbering",
+                  }}
+                />
+              </pre>
+            </div>
+          </div>
+        </div>
+  
+        {iFrameURL && webContainer && (
+          <div className="flex min-w-72 flex-col h-full border-l border-cyan-900/30">
+            <div className="addressBar bg-slate-900">
+              <input 
+                type="text"
+                className="w-full p-2 px-4 bg-slate-800 text-slate-200 outline-none border-b border-cyan-900/30"
                 value={iFrameURL}
                 onChange={(e) => setIframeURL(e.target.value)}
-                />
-              </div>
-              <iframe
+              />
+            </div>
+            <iframe
               src={iFrameURL}
               title="WebContainer"
-              className="w-full h-full"
-            >
-              </iframe>
-            </div>
-
-
-          )}
-        
+              className="w-full h-full bg-white"
+            />
+          </div>
+        )}
       </section>
-
+  
       {/* Modal */}
       {modalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-          <div className="bg-white rounded-md p-6 w-96">
-            <h2 className="text-lg font-bold mb-4">Add Collaborators</h2>
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex justify-center items-center z-50">
+          <div className="bg-slate-900 rounded-xl p-6 w-96 border border-cyan-900/30 shadow-xl">
+            <h2 className="text-lg font-bold mb-4 text-cyan-100">Add Collaborators</h2>
             <ul
-              className="space-y-2 mb-6"
-              style={{ maxHeight: "300px", overflowY: "auto" }}
+              className="space-y-2 mb-6 scrollbar-hide"
+              style={{ maxHeight: "300px", overflowY: "auto", scrollbarWidth: 'none', msOverflowStyle: 'none' }}
             >
               {users.map((user, index) => (
                 <li
                   key={user._id}
-                  className={`flex items-center p-2 rounded-md shadow-sm cursor-pointer transition-colors duration-200 ${
+                  className={`flex items-center p-3 rounded-lg cursor-pointer transition-all duration-200 ${
                     selectedUserId.includes(user._id)
-                      ? "bg-blue-300"
-                      : "bg-gray-100 hover:bg-gray-200"
+                      ? "bg-cyan-900/30 text-cyan-100"
+                      : "bg-slate-800 text-slate-200 hover:bg-slate-700 border border-slate-700"
                   }`}
-                  onClick={() => handleUserClick(user._id)} // Directly call the function
+                  onClick={() => handleUserClick(user._id)}
                 >
                   <img
                     src={userImages[index]}
                     alt="User"
-                    className="w-8 h-8 rounded-full mr-3"
+                    className="w-8 h-8 rounded-full mr-3 border-2 border-cyan-600"
                   />
                   <span className="text-sm font-medium">{user.email}</span>
                 </li>
               ))}
             </ul>
-
+  
             <div className="flex justify-between">
               <button
                 onClick={() => setModalOpen(false)}
-                className="bg-gray-300 hover:bg-gray-400 text-black px-4 py-2 rounded-md"
+                className="bg-slate-800 hover:bg-slate-700 text-slate-200 px-4 py-2 rounded-lg transition-colors duration-200"
               >
                 Cancel
               </button>
               <button
                 onClick={() => {
-                  // Add logic to handle adding collaborators here
                   addCollaborators();
-                  console.log("Add as collaborator clicked");
                   setModalOpen(false);
                 }}
-                className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md"
+                className="bg-cyan-600 hover:bg-cyan-500 text-white px-4 py-2 rounded-lg transition-colors duration-200"
               >
                 Add as Collaborator
               </button>

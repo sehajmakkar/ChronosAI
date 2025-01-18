@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Mail, Lock, ArrowRight, Zap } from 'lucide-react';
 import axios from '../config/axios';
 import { UserContext } from '../context/user.context';
+import { showError, showSuccess } from '../config/toast';
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -20,6 +21,7 @@ const LoginPage = () => {
       setUser(res.data.user);
       navigate('/home');
     } catch (err) {
+      showError(err.response.data.message);
       console.log(err.response.data);
     } finally {
       setIsLoading(false);

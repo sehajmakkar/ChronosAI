@@ -15,9 +15,9 @@ const AppRoutes = () => {
         <Landing />
       } />
       <Route path="/home" element={
-        //<UserAuth>
+        <UserAuth>
           <Home/>
-        //</UserAuth>
+        </UserAuth>
       } />
       <Route path="/login" element={
         <LoginPage />
@@ -26,9 +26,9 @@ const AppRoutes = () => {
         <SignupPage/>
       } />
       <Route path="/project" element={
-        //<UserAuth>
-        <Project/>
-      //</UserAuth>
+        <UserAuth>
+          <Project/>
+        </UserAuth>
       } />
     </Routes>
    </BrowserRouter>

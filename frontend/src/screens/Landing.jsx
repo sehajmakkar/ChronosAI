@@ -121,7 +121,7 @@ function App() {
                 <button onClick={() => navigate('/home')} className="px-8 py-4 bg-cyan-500 text-black text-base font-semibold rounded-lg hover:bg-cyan-400 transition flex items-center">
                   Create a Project <ArrowRight className="ml-2 w-5 h-5" />
                 </button>
-                <button className="px-8 py-4 bg-black/30 backdrop-blur-sm border border-cyan-500/30 text-white text-base font-semibold rounded-lg hover:bg-black/50 transition flex items-center">
+                <button onClick={() => window.open('https://github.com/sehajmakkar/ChronosAI', '_blank')} className="px-8 py-4 bg-black/30 backdrop-blur-sm border border-cyan-500/30 text-white text-base font-semibold rounded-lg hover:bg-black/50 transition flex items-center">
                   <Github className="mr-2 w-5 h-5" /> GitHub
                 </button>
               </div>

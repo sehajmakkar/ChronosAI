@@ -1,17 +1,37 @@
 import React, { useState, useEffect } from 'react';
-import { MessageSquareCode, Users, Zap, ArrowRight, Github } from 'lucide-react';
+import { MessageSquareCode, Users, Zap, ArrowRight, Github, Brain } from 'lucide-react';
 import Spline from '@splinetool/react-spline';
 import { useNavigate } from 'react-router-dom';
+import {User, LogOut} from 'lucide-react'
 
 function App() {
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false); 
 
   const navigate = useNavigate();
+
+  const handleLogout = () => {
+    setIsLoggedIn(false);
+    // logout pe axios se call..
+    try{
+      localStorage.removeItem('token');
+      console.log('Logout successful');
+    } catch (err) {
+      console.log(err);
+    }
+    navigate('/');
+  };
 
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 20);
     };
+
+    /// check if user if logged in or not
+    const token = localStorage.getItem('token');
+    if (token) {
+      setIsLoggedIn(true);
+    }
 
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
@@ -48,11 +68,38 @@ function App() {
               <a href="contact" className="text-sm font-medium text-gray-300 hover:text-cyan-400 transition">Contact</a>
               <a href="about" className="text-sm font-medium text-gray-300 hover:text-cyan-400 transition">About</a>
             </div>
-            <div className="flex space-x-4">
-              <button onClick={() => navigate('/login')} className="px-4 py-2 text-sm font-medium text-gray-300 hover:text-cyan-400 transition">Log In</button>
-              <button onClick={() => navigate('/register')} className="px-4 py-2 bg-cyan-500 text-sm font-medium text-black rounded-lg hover:bg-cyan-400 transition">
-                Sign Up
-              </button>
+            <div className="flex items-center space-x-4">
+              {isLoggedIn ? (
+                <>
+                  <div className="flex items-center space-x-3">
+                    <button 
+                      onClick={handleLogout}
+                      className="px-4 py-2 text-sm font-medium text-gray-300 hover:text-cyan-400 transition flex items-center"
+                    >
+                      <LogOut className="w-4 h-4 mr-2" />
+                      Logout
+                    </button>
+                    <div className="w-8 h-8 rounded-full bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center">
+                      <User className="w-5 h-5 text-cyan-400" />
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <button 
+                    onClick={() => navigate('/login')} 
+                    className="px-4 py-2 text-sm font-medium text-gray-300 hover:text-cyan-400 transition"
+                  >
+                    Log In
+                  </button>
+                  <button 
+                    onClick={() => navigate('/register')} 
+                    className="px-4 py-2 bg-cyan-500 text-sm font-medium text-black rounded-lg hover:bg-cyan-400 transition"
+                  >
+                    Sign Up
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -93,18 +140,18 @@ function App() {
           <div className="grid md:grid-cols-3 gap-6">
             <div className="bg-black/30 backdrop-blur-sm border border-cyan-500/20 p-8 rounded-xl hover:border-cyan-500/40 transition">
               <MessageSquareCode className="w-12 h-12 text-cyan-400 mb-4" />
-              <h3 className="text-xl font-bold text-white mb-2">AI-Powered Code Analysis</h3>
-              <p className="text-base text-gray-300">Get real-time suggestions and code reviews from our advanced AI engine.</p>
+              <h3 className="text-xl font-bold text-white mb-2">Instant Project Setup</h3>
+              <p className="text-base text-gray-300">One command is all it takes. Get complete project structures and boilerplate code instantly, tailored to your vision.</p>
+            </div>
+            <div className="bg-black/30 backdrop-blur-sm border border-cyan-500/20 p-8 rounded-xl hover:border-cyan-500/40 transition">
+              <Brain className="w-12 h-12 text-cyan-400 mb-4" />
+              <h3 className="text-xl font-bold text-white mb-2">AI Assistant</h3>
+              <p className="text-base text-gray-300">Your personal AI developer is available 24/7 for code reviews, suggestions, and problem-solving guidance.</p>
             </div>
             <div className="bg-black/30 backdrop-blur-sm border border-cyan-500/20 p-8 rounded-xl hover:border-cyan-500/40 transition">
               <Users className="w-12 h-12 text-cyan-400 mb-4" />
-              <h3 className="text-xl font-bold text-white mb-2">Team Collaboration</h3>
-              <p className="text-base text-gray-300">Work seamlessly with your team in real-time with integrated chat.</p>
-            </div>
-            <div className="bg-black/30 backdrop-blur-sm border border-cyan-500/20 p-8 rounded-xl hover:border-cyan-500/40 transition">
-              <Zap className="w-12 h-12 text-cyan-400 mb-4" />
-              <h3 className="text-xl font-bold text-white mb-2">Lightning Fast</h3>
-              <p className="text-base text-gray-300">Experience blazing-fast performance with our optimized infrastructure.</p>
+              <h3 className="text-xl font-bold text-white mb-2">Real-time Collaboration</h3>
+              <p className="text-base text-gray-300">Chat, code, and create together. Our real-time collaboration features make team development seamless.</p>
             </div>
           </div>
         </div>

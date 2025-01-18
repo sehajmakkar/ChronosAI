@@ -6,6 +6,8 @@ import Home from '../screens/Home.jsx'
 import Project from '../screens/Project.jsx'
 import UserAuth from '../auth/UserAuth.jsx'
 import Landing from '../screens/Landing.jsx'
+import Contact from '../screens/Contact.jsx'
+import About from '../screens/About.jsx'
 
 const AppRoutes = () => {
   return (
@@ -30,6 +32,9 @@ const AppRoutes = () => {
           <Project/>
         </UserAuth>
       } />
+
+      <Route path="/contact" element={<Contact />} />
+      <Route path="/about" element={<About />} />
     </Routes>
    </BrowserRouter>
   )

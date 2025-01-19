@@ -8,8 +8,13 @@ import cors from "cors";
 const app = express();
 
 app.use(cors({
-  origin: ['https://chronos-ai-seven.vercel.app/', 'http://localhost:5173', 'http://localhost:3000'],
-  credentials: true
+  origin: [
+      'https://chronos-ai-seven.vercel.app',
+      'http://localhost:3000'
+  ],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 app.use(morgan("dev"));
 app.use(express.json());

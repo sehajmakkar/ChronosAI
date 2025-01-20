@@ -294,11 +294,11 @@ const Project = () => {
       try {
         initializeSocket(project._id);
 
-        if (!webContainer) {
-          const container = await getWebContainer();
-          setWebContainer(container);
-          console.log("container created");
-        }
+        // if (!webContainer) {
+        //   const container = await getWebContainer();
+        //   setWebContainer(container);
+        //   console.log("container created");
+        // }
 
         // Load existing messages
         const messagesResponse = await axios.get(
@@ -327,7 +327,7 @@ const Project = () => {
 
             if (parsedMessage.fileTree) {
               fileTreeData = parsedMessage.fileTree;
-              webContainer?.mount(fileTreeData);
+              // webContainer?.mount(fileTreeData);
               setFileTree(fileTreeData);
 
               // Save fileTree to database when received from AI
@@ -618,7 +618,7 @@ const Project = () => {
           </div>
         </div>
 
-        {iFrameURL && webContainer && (
+        {/* {iFrameURL && webContainer && (
           <div className="flex min-w-72 flex-col h-full border-l border-cyan-900/30">
             <div className="addressBar bg-slate-900">
               <input
@@ -634,7 +634,8 @@ const Project = () => {
               className="w-full h-full bg-white"
             />
           </div>
-        )}
+        )} */}
+
       </section>
 
       {/* Modal */}

@@ -5,7 +5,7 @@
       "destination": "/index.html"
     }
   ],
-  "headers": [
+  "headers": [ 
     {
       "source": "/(.*)",
       "headers": [

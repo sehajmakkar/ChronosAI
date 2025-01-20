@@ -173,8 +173,15 @@ const Project = () => {
   }
 
   function scrollToBottom() {
-    messageBox.current.scrollTop = messageBox.current.scrollHeight;
+    if (messageBox.current) {
+      messageBox.current.scrollTop = messageBox.current.scrollHeight;
+    }
   }
+  
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
   const handleTextAreaChange = (e) => {
     setFileTree({
       ...fileTree,
@@ -438,6 +445,12 @@ const Project = () => {
             className="p-2 px-4 bg-slate-800 text-slate-200 border border-slate-700 rounded-l-lg flex-grow outline-none focus:border-cyan-600 transition-colors duration-200 placeholder:text-slate-500"
             value={message}
             onChange={(e) => setMessage(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                send();
+              }
+            }}
           />
           <button
             className="px-5 bg-cyan-600 text-white rounded-r-lg hover:bg-cyan-500 transition-colors duration-200 flex items-center justify-center"

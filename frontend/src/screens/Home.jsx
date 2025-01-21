@@ -3,6 +3,7 @@ import { UserContext } from "../context/user.context";
 import axios from "../config/axios";
 import { useNavigate } from "react-router-dom";
 import { Users, Plus, ArrowUpRight, FolderPlus, X, Loader2 } from 'lucide-react';
+import {showError, showSuccess} from "../config/toast";
 
 const Home = () => {
   const { user } = useContext(UserContext);
@@ -23,6 +24,7 @@ const Home = () => {
       setProjectName("");
       fetchProjects();
     } catch (err) {
+      showError("Refresh the page and try again..");
       console.log(err.response.data);
     } finally {
       setIsCreating(false);

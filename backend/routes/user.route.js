@@ -30,7 +30,7 @@ router.post(
 router.get("/profile", authMiddleware.authUser, userController.ProfileController);
 
 // logout api
-router.get("/logout", authMiddleware.authUser, userController.logoutController);
+// router.get("/logout", authMiddleware.authUser, userController.logoutController);
 
 //get all users api
 router.get("/all", authMiddleware.authUser, userController.getAllUsersController)

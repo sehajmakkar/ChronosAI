@@ -6,6 +6,8 @@ import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
 import projectModel from "./models/project.model.js";
 import { generateResult } from "./services/ai.service.js";
+import cron from 'node-cron';
+import axios from 'axios';
 
 
 
@@ -97,4 +99,20 @@ io.on('connection', socket => {
 
 server.listen(process.env.PORT, () => {
   console.log(`Server is running on port ${process.env.PORT}`);
+
+  // Set up the cron job to run every 14 minutes
+  cron.schedule('*/1 * * * *', async () => {
+    try {
+      // Get the server URL from environment variable or construct it
+      const serverUrl = process.env.SERVER_URL || `http://localhost:${process.env.PORT}`;
+      
+      console.log(`[${new Date().toISOString()}] Executing cron job to keep server alive`);
+      
+      // Make a request to your own server
+      const response = await axios.get(`${serverUrl}/ping`);
+      console.log(`[${new Date().toISOString()}] Server pinged successfully:`, response.data.status);
+    } catch (error) {
+      console.error(`[${new Date().toISOString()}] Error pinging server:`, error.message);
+    }
+  });
 });

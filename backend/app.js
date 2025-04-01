@@ -48,5 +48,10 @@ app.use("/projects", projectRouter);
 // /ai/get-result
 app.use("/ai", aiRouter);
 
+// Add this ping endpoint before the export default app; line
+app.get("/ping", (req, res) => {
+  console.log(`Ping received at ${new Date().toISOString()}`);
+  res.status(200).json({ status: "Server is awake", timestamp: new Date().toISOString() });
+});
 
 export default app;

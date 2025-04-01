@@ -100,8 +100,8 @@ io.on('connection', socket => {
 server.listen(process.env.PORT, () => {
   console.log(`Server is running on port ${process.env.PORT}`);
 
-  // Set up the cron job to run every 14 minutes
-  cron.schedule('*/1 * * * *', async () => {
+  // Set up the cron job to run every 5 minutes
+  cron.schedule('*/5 * * * *', async () => {
     try {
       // Get the server URL from environment variable or construct it
       const serverUrl = process.env.SERVER_URL || `http://localhost:${process.env.PORT}`;

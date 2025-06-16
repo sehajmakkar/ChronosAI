@@ -118,4 +118,4 @@ If you have any questions or need help, please open an issue or contact our team
 
 ---
 
-Made with ❤️ by the SEHAJ
+Made with ❤️ by SEHAJ
